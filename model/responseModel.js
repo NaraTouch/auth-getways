@@ -2,7 +2,6 @@
 exports.success = (msg, stCode, res) => {
     return {
         message: msg,
-        error: false,
         code: stCode,
         data: res
     };
@@ -11,29 +10,32 @@ exports.success = (msg, stCode, res) => {
 exports.error = (msg, stCode, err) => {
     return {
         message: msg,
-        error: true,
         code: stCode,
         error: err
     };
 };
 
-exports.validation = (errors) => {
-    return {
-        message: "Validation errors",
-        error: true,
-        code: 422,
-        errors
-    };
-}
-
 exports.msg_success = () => {
     return 'Success.';
 }
-
 exports.msg_invalid_cred = () => {
-    return 'Invalid Credentials.';
+    return 'Invalid credentials.';
 }
-
 exports.msg_already_exist = () => {
-    return 'Already Exist.';
+    return 'Already exist.';
+}
+exports.msg_validate = () => {
+    return 'Error validation.';
+}
+exports.msg_wrong_pass_user = () => {
+    return 'Wrong password and email.';
+}
+exports.msg_required = () => {
+    return 'required.';
+}
+exports.msg_not_found = () => {
+    return 'Error not found.';
+}
+exports.msg_server_error = () => {
+    return 'Server error.';
 }

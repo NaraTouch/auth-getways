@@ -25,11 +25,11 @@ const login = async (req, res) => {
         await user.save();
         return res
             .status(200)
-            .send(Resp.success(Resp.msg_success(), res.statusCode, user));
+            .send(Resp.success(Resp.msg_success(), res.statusCode, {token: n_token}));
     }
     return res
         .status(400)
-        .send(Resp.error(Resp.msg_invalid_cred(), res.statusCode)
+        .send(Resp.error(Resp.msg_wrong_pass_user(), res.statusCode)
     );
 }
 
