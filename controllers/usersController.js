@@ -1,53 +1,60 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../model/user");
+
+const User = require("../model/userModel");
+const BlackList = require("../model/blackListModel");
+const Resp = require("../model/responseModel");
 
 const login = async (req, res) => {
-    
-    try {
-        const { email, password } = req.body;
-    if (!(email && password)) {
-        res.status(400).send("All input is required");
-    }
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (user && (await bcrypt.compare(password, user.password))) {
+    const ex_token = user.token;
+    const compare = await bcrypt.compare(password, user.password);
+    if (ex_token) {
+        await BlackList.create({
+            user_id: user._id,
+            token: user.token,
+        });
+    }
+    if (user && compare) {
         const cr_user = {user_id: user._id, email: email};
         const token_key = process.env.TOKEN_KEY;
         const expired = {expiresIn: "2h"};
-        const token = jwt.sign(cr_user,token_key,expired);
-        user.token = token;
-        res.status(200).json(user);
+        const n_token = jwt.sign(cr_user,token_key,expired);
+        user.token = n_token;
+        await user.save();
+        return res
+            .status(200)
+            .send(Resp.success(Resp.msg_success(), res.statusCode, user));
     }
-        res.status(400).send("Invalid Credentials");
-    } catch (err) {
-        console.log(err);
-    }
+    return res
+        .status(400)
+        .send(Resp.error(Resp.msg_invalid_cred(), res.statusCode)
+    );
 }
 
 const register = async (req, res) => {
-    try {
-        const { first_name, last_name, email, password } = req.body;
-        if (!(email && password && first_name && last_name)) {
-            res.status(400).send("All input is required");
-        }
-        const oldUser = await User.findOne({ email });
+    const { first_name, last_name, email, password } = req.body;
+    const existing = await User.findOne({ email });
 
-        if (oldUser) {
-            return res
-                .status(409)
-                .send("User Already Exist. Please Login");
-        }
-        encryptedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({
-            first_name,
-            last_name,
-            email: email.toLowerCase(),
-            password: encryptedPassword,
-        });
-        res.status(201).json(user);
-    } catch (err) {
-        console.log(err);
+    if (existing) {
+        return res
+            .status(409)
+            .send(
+                Resp.error("User "+Resp.msg_invalid_cred()+" Please login.",
+                res.statusCode)
+            );
     }
+    encryptedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+        first_name,
+        last_name,
+        email: email.toLowerCase(),
+        password: encryptedPassword,
+    });
+    return res
+        .status(200)
+        .send(Resp.success(Resp.msg_success(), res.statusCode, user));
 }
 
 module.exports = {
